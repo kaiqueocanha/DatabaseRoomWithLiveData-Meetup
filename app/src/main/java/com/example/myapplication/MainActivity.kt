@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.doAsync
@@ -14,7 +16,9 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var appDatabase: AppDatabase
 
-    val adapter = Adapter()
+    private val adapter = Adapter()
+
+    lateinit var notesList: LiveData<List<Note>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,6 +26,12 @@ class MainActivity : AppCompatActivity() {
 
         setupDatabase()
         setupRecyclerView()
+
+        notesList.observe(this, Observer {
+            it?.let { list ->
+                adapter.setData(list)
+            }
+        })
 
         fab.setOnClickListener {
             val newNoteActivity = Intent(this, AddNoteActivity::class.java)
@@ -32,6 +42,7 @@ class MainActivity : AppCompatActivity() {
 
     fun setupDatabase() {
         appDatabase = AppDatabase.getInstance(this)
+        notesList = appDatabase.notesDao().getAll()
     }
 
     fun setupRecyclerView() {
